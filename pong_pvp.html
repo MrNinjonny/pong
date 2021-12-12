@@ -1,0 +1,181 @@
+<canvas id='pong' width='600' height='400'canvas>
+
+<script>
+var canvas = document.getElementById('pong');
+var ctx = canvas.getContext('2d');
+
+const netWidth = 4;
+const netHeight = pong.height;
+
+const paddleWidth = 10;
+const paddleHeight = 100;
+
+var upArrowPresseduser1 = false;
+var downArrowPresseduser1 = false;
+
+var upArrowPresseduser2 = false;
+var downArrowPresseduser2 = false;
+
+var net = {
+  x: canvas.width / 2 - netWidth / 2,
+  y: 0,
+  width: netWidth,
+  height: netHeight,
+  color: "white"
+};
+
+var user1 = {
+  x: 10,
+  y: canvas.height / 2 - paddleHeight / 2,
+  width: paddleWidth,
+  height: paddleHeight,
+  color: 'white',
+  score: 0
+};
+
+var user2 = {
+  x: canvas.width - (paddleWidth + 10),
+  y: canvas.height / 2 - paddleHeight / 2,
+  width: paddleWidth,
+  height: paddleHeight,
+  color: 'white',
+  score: 0
+};
+
+var ball = {
+  x: canvas.width / 2,
+  y: canvas.height / 2,
+  radius: 7,
+  speed: 7,
+  velocityX: 5,
+  velocityY: 5,
+  color: 'white'
+};
+
+function drawNet() {
+  ctx.fillStyle = net.color;
+  ctx.fillRect(net.x, net.y, net.width, net.height);
+}
+function drawScore(x, y, score) {
+  ctx.fillStyle = 'white';
+  ctx.font = '35px sans-serif';
+  ctx.fillText(score, x, y);
+}
+function drawPaddle(x, y, width, height, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, width, height);
+}
+function drawBall(x, y, radius, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2, true); 
+  ctx.closePath();
+  ctx.fill();
+}
+function render() {
+  ctx.fillStyle = "black"; 
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawNet();
+  drawScore(canvas.width / 4, canvas.height / 6, user1.score);
+  drawScore(3 * canvas.width / 4, canvas.height / 6, user2.score);
+  drawPaddle(user1.x, user1.y, user1.width, user1.height, user1.color);
+  drawPaddle(user2.x, user2.y, user2.width, user2.height, user2.color);
+  drawBall(ball.x, ball.y, ball.radius, ball.color);
+}
+function resetBall() {
+  ball.x = canvas.width / 2;
+  ball.y = canvas.height / 2;
+  ball.speed = 7;
+  ball.velocityX = -ball.velocityX;
+  ball.velocityY = -ball.velocityY;
+}
+function update(){
+	if (upArrowPresseduser1 && user1.y >= 0) {
+		user1.y -= 8;
+	} 
+	else if (downArrowPresseduser1 && (user1.y <= canvas.height - user1.height)) {
+    user1.y += 8;
+	}
+	if (upArrowPresseduser2 && user2.y >= 0) {
+		user2.y -= 8;
+	} 
+	else if (downArrowPresseduser2 && (user2.y <= canvas.height - user2.height)) {
+		user2.y += 8;
+	}
+	if(ball.x + ball.radius >= canvas.width){
+		user1.score++;
+		resetBall();
+	}
+	if(ball.x - ball.radius <= 0){
+		user2.score++;
+		resetBall();
+	}
+	if(ball.y + ball.radius >= canvas.height || ball.y - ball.radius <= 0){
+		ball.velocityY =- ball.velocityY;
+	}
+	var player = (ball.x < canvas.width / 2) ? user1 : user2;
+	if(isCollision(player)){
+		var angle = 0;
+        if (ball.y < (player.y + player.height / 2)) {
+			angle = -1 * Math.PI / 4;
+		} 
+		else if (ball.y > (player.y + player.height / 2)) {
+			angle = Math.PI / 4;
+    }
+		ball.velocityX = (player === user1 ? 1 : -1) * ball.speed * Math.cos(angle);
+		ball.velocityY = ball.speed * Math.sin(angle);
+	}
+	ball.x += ball.velocityX;
+	ball.y += ball.velocityY;
+}
+function isCollision(player){
+  var right_player = player.x + player.width;
+  var bottom_player = player.y + player.height;
+	
+  var top = ball.y - ball.radius;
+  var right = ball.x + ball.radius;
+  var bottom = ball.y + ball.radius;
+  var left = ball.x - ball.radius;
+
+  return left < right_player && top < bottom_player && right > player.x && bottom > player.y;
+}
+window.onkeydown = function(event) {
+	switch(event.keyCode) 
+	{
+		case 38:
+			upArrowPresseduser2 = true;
+			break;
+		case 40:
+			downArrowPresseduser2 = true;
+			break;
+		case 87:
+			upArrowPresseduser1 = true;
+			break;
+		case 83:
+			downArrowPresseduser1 = true;
+			break;
+	}
+}
+window.onkeyup = function(event) {
+	switch(event.keyCode) 
+	{
+		case 38:
+			upArrowPresseduser2 = false;
+			break;
+		case 40:
+			downArrowPresseduser2 = false;
+			break;
+		case 87:
+			upArrowPresseduser1 = false;
+			break;
+		case 83:
+			downArrowPresseduser1 = false;
+			break;
+	}
+}
+function  gameLoop() {
+	update();
+	render();
+}
+setInterval(gameLoop, 1000 / 60);
+</script>
